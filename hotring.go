@@ -198,7 +198,7 @@ func (d *Dict) AllDB() {
 
 func main() {
 	d := InitDict()
-	for i := 0; i < 10000000; i++ {
+	for i := 0; i < 100; i++ {
 		d.Set(fmt.Sprintf("k%d", i), fmt.Sprintf("v%d", i))
 	}
 	d.AllDB()
