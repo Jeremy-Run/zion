@@ -189,8 +189,11 @@ func (d *Dict) expandDict() {
 	d.rehashTime++
 }
 
-func set(key string, val string, d *Dict) {
-
+func (d *Dict) Set(key string, val string) {
+	if d.used >= d.size {
+		d.expandDict()
+	}
+	var tag int8
 	h := GetHash([]byte(key))
 	subscript := h & d.sizemask
 	if entry := d.t1[subscript]; entry != nil {
@@ -201,21 +204,18 @@ func set(key string, val string, d *Dict) {
 			}
 			if entry.next == nil {
 				entry.next = &DictEntry{key: key, val: val}
+				tag = 1
 				break
 			}
 			entry = entry.next
 		}
 	} else {
 		d.t1[subscript] = &DictEntry{key: key, val: val}
+		tag = 1
 	}
-}
-
-func (d *Dict) Set(key string, val string) {
-	if d.used >= d.size {
-		d.expandDict()
+	if tag == 1 {
+		d.used++
 	}
-	set(key, val, d)
-	d.used++
 }
 
 func (d *Dict) Get(key string) string {
@@ -260,7 +260,7 @@ func (d *Dict) AllDB() {
 
 func main() {
 	d := InitDict()
-	for i := 0; i < 10000; i++ {
+	for i := 0; i < 100; i++ {
 		d.Set(fmt.Sprintf("k%d", i), fmt.Sprintf("v%d", i))
 	}
 	d.AllDB()
