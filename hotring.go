@@ -148,7 +148,6 @@ func (d *Dict) migration() {
 		if entry := d.t1[i]; entry != nil {
 			next := entry.next
 			for true {
-
 				if entry2 := d.t2[entry.h&d.sizemask]; entry2 != nil {
 					// 新队列里有值
 					next2 := entry2.next
@@ -203,14 +202,14 @@ func (d *Dict) Set(key string, val string) {
 				break
 			}
 			if entry.next == nil {
-				entry.next = &DictEntry{key: key, val: val}
+				entry.next = &DictEntry{h: h, key: key, val: val}
 				tag = 1
 				break
 			}
 			entry = entry.next
 		}
 	} else {
-		d.t1[subscript] = &DictEntry{key: key, val: val}
+		d.t1[subscript] = &DictEntry{h: h, key: key, val: val}
 		tag = 1
 	}
 	if tag == 1 {
@@ -245,8 +244,6 @@ func (d *Dict) AllDB() {
 					maxLoad = slotMap[i]
 				}
 
-				//fmt.Printf("slot: %d, entry.key: %s, entry.val: %s \n", i, entry.key, entry.val)
-
 				if entry.next == nil {
 					break
 				}
@@ -260,7 +257,7 @@ func (d *Dict) AllDB() {
 
 func main() {
 	d := InitDict()
-	for i := 0; i < 100; i++ {
+	for i := 0; i < 10000000; i++ {
 		d.Set(fmt.Sprintf("k%d", i), fmt.Sprintf("v%d", i))
 	}
 	d.AllDB()
