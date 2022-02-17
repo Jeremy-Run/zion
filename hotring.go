@@ -2,7 +2,6 @@ package main
 
 import (
 	"fmt"
-	"unsafe"
 )
 
 const (
@@ -60,74 +59,16 @@ func MurmurHash64A(data []byte) (h int64) {
 	return
 }
 
-const (
-	c1_32 uint32 = 0xcc9e2d51
-	c2_32 uint32 = 0x1b873593
-)
-
-// GetHash returns a murmur32 hash for the data slice.
-func GetHash(data []byte) uint32 {
-	// Seed is set to 37, same as C# version of emitter
-	var h1 uint32 = 37
-
-	nblocks := len(data) / 4
-	var p uintptr
-	if len(data) > 0 {
-		p = uintptr(unsafe.Pointer(&data[0]))
-	}
-
-	p1 := p + uintptr(4*nblocks)
-	for ; p < p1; p += 4 {
-		k1 := *(*uint32)(unsafe.Pointer(p))
-
-		k1 *= c1_32
-		k1 = (k1 << 15) | (k1 >> 17) // rotl32(k1, 15)
-		k1 *= c2_32
-
-		h1 ^= k1
-		h1 = (h1 << 13) | (h1 >> 19) // rotl32(h1, 13)
-		h1 = h1*5 + 0xe6546b64
-	}
-
-	tail := data[nblocks*4:]
-
-	var k1 uint32
-	switch len(tail) & 3 {
-	case 3:
-		k1 ^= uint32(tail[2]) << 16
-		fallthrough
-	case 2:
-		k1 ^= uint32(tail[1]) << 8
-		fallthrough
-	case 1:
-		k1 ^= uint32(tail[0])
-		k1 *= c1_32
-		k1 = (k1 << 15) | (k1 >> 17) // rotl32(k1, 15)
-		k1 *= c2_32
-		h1 ^= k1
-	}
-
-	h1 ^= uint32(len(data))
-
-	h1 ^= h1 >> 16
-	h1 *= 0x85ebca6b
-	h1 ^= h1 >> 13
-	h1 *= 0xc2b2ae35
-	h1 ^= h1 >> 16
-
-	return (h1 << 24) | (((h1 >> 8) << 16) & 0xFF0000) | (((h1 >> 16) << 8) & 0xFF00) | (h1 >> 24)
-}
-
 type Dict struct {
 	t1, t2     []*DictEntry
-	size       uint32
-	sizemask   uint32
-	used       uint32
+	size       int64
+	sizemask   int64
+	used       int64
 	rehashTime int
 }
 
 type DictEntry struct {
-	h    uint32
+	h    int64
 	key  string
 	val  string
 	next *DictEntry
@@ -144,7 +85,7 @@ func InitDict() *Dict {
 
 func (d *Dict) migration() {
 	d.t2 = make([]*DictEntry, d.size)
-	for i := uint32(0); i < d.size>>1; i++ {
+	for i := int64(0); i < d.size>>1; i++ {
 		if entry := d.t1[i]; entry != nil {
 			next := entry.next
 			for true {
@@ -193,7 +134,7 @@ func (d *Dict) Set(key string, val string) {
 		d.expandDict()
 	}
 	var tag int8
-	h := GetHash([]byte(key))
+	h := MurmurHash64A([]byte(key))
 	subscript := h & d.sizemask
 	if entry := d.t1[subscript]; entry != nil {
 		for true {
@@ -218,7 +159,7 @@ func (d *Dict) Set(key string, val string) {
 }
 
 func (d *Dict) Get(key string) string {
-	h := GetHash([]byte(key))
+	h := MurmurHash64A([]byte(key))
 	if entry := d.t1[h&d.sizemask]; entry != nil {
 		for true {
 			if entry.key == key {
@@ -234,9 +175,9 @@ func (d *Dict) Get(key string) string {
 }
 
 func (d *Dict) AllDB() {
-	slotMap := make(map[uint32]int)
+	slotMap := make(map[int64]int)
 	maxLoad := 0
-	for i := uint32(0); i < d.size; i++ {
+	for i := int64(0); i < d.size; i++ {
 		if entry := d.t1[i]; entry != nil {
 			for true {
 				slotMap[i]++
