@@ -79,28 +79,23 @@ func (d *Dict) Set(key string, val string, t *Target) {
 		d.expandDict(t)
 	}
 
-	var tag int8
 	h := MurmurHash64A([]byte(key))
 	subscript := h & d.sizemask
 	if entry := d.t1[subscript]; entry != nil {
 		for true {
 			if entry.Key == key {
 				fmt.Printf("Data already exists key: %s \n", key)
-				break
-			}
-			if entry.Next == nil {
-				entry.Next = &DictEntry{H: h, Key: key, Val: val}
-				tag = 1
-				break
+				return
 			}
 			entry = entry.Next
+			if entry == nil {
+				break
+			}
 		}
+		d.t1[subscript] = &DictEntry{H: h, Key: key, Val: val, Next: d.t1[subscript]}
+		d.used++
 	} else {
 		d.t1[subscript] = &DictEntry{H: h, Key: key, Val: val}
-		tag = 1
-	}
-	if tag == 1 {
-		d.used++
 	}
 }
 
