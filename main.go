@@ -19,15 +19,15 @@ func main() {
 	d := InitDict()
 	m := InitMetrics()
 
-	// write data to dict
+	// Write data to dict
 	for i := 0; i < c.DataSize; i++ {
 		d.Set(fmt.Sprintf("k%d", i), fmt.Sprintf("v%d", i), m, c)
 	}
 
-	// dict metrics
+	// Update dict metrics
 	d.AllDB(m)
 
-	// read data by dict and calculate spend time
+	// Read data by dict and calculate spend time
 	startTime := time.Now()
 	for j := 0; j < c.ReadTime; j++ {
 		d.Get(m.LastEntry.Key)
@@ -35,11 +35,11 @@ func main() {
 	elapsedTime := time.Since(startTime) / time.Millisecond
 	fmt.Printf("Time: segment finished in %dms \n", elapsedTime)
 
-	// print config
+	// Print config
 	cj, _ := json.Marshal(c)
 	fmt.Printf("Config: %s \n", cj)
 
-	// print metrics
+	// Print metrics
 	mj, _ := json.Marshal(m)
 	fmt.Printf("Metrics: %s \n", mj)
 }
