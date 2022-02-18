@@ -36,20 +36,9 @@ func (d *Dict) migration() {
 			next := entry.Next
 			for true {
 				if entry2 := d.t2[entry.H&d.sizemask]; entry2 != nil {
-					next2 := entry2.Next
-					for true {
-						if next2 == nil {
-							entry2.Next = entry
-							entry2.Next.Next = nil
-
-							break
-						}
-						entry2 = entry2.Next
-						next2 = entry2.Next
-					}
+					d.t2[entry.H&d.sizemask] = &DictEntry{H: entry.H, Key: entry.Key, Val: entry.Val, Next: entry2}
 				} else {
-					d.t2[entry.H&d.sizemask] = entry
-					d.t2[entry.H&d.sizemask].Next = nil
+					d.t2[entry.H&d.sizemask] = &DictEntry{H: entry.H, Key: entry.Key, Val: entry.Val}
 				}
 
 				if next == nil {
@@ -87,16 +76,16 @@ func (d *Dict) Set(key string, val string, t *Target) {
 				fmt.Printf("Data already exists key: %s \n", key)
 				return
 			}
-			entry = entry.Next
-			if entry == nil {
+			if entry.Next == nil {
+				entry.Next = &DictEntry{H: h, Key: key, Val: val}
 				break
 			}
+			entry = entry.Next
 		}
-		d.t1[subscript] = &DictEntry{H: h, Key: key, Val: val, Next: d.t1[subscript]}
-		d.used++
 	} else {
 		d.t1[subscript] = &DictEntry{H: h, Key: key, Val: val}
 	}
+	d.used++
 }
 
 func (d *Dict) Get(key string) string {
