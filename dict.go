@@ -1,11 +1,5 @@
 package main
 
-type Config struct {
-	DataSize int
-	Factor   int64
-	ReadTime int
-}
-
 type Metrics struct {
 	CurrentFactor float64
 	RehashTime    int
@@ -25,14 +19,6 @@ type DictEntry struct {
 	Key  string
 	Val  string
 	Next *DictEntry
-}
-
-func InitConfig(factor int64, dataSize int, readTime int) Config {
-	return Config{
-		DataSize: dataSize,
-		Factor:   factor,
-		ReadTime: readTime,
-	}
 }
 
 func InitDict() *Dict {
