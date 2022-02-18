@@ -1,9 +1,5 @@
 package main
 
-import (
-	"fmt"
-)
-
 type Config struct {
 	DataSize int
 	Factor   int64
@@ -99,7 +95,7 @@ func (d *Dict) Set(key string, val string, m *Metrics, c Config) {
 	if entry := d.t1[subscript]; entry != nil {
 		for true {
 			if entry.Key == key {
-				fmt.Printf("Data already exists key: %s \n", key)
+				entry.Val = val
 				return
 			}
 			if entry.Next == nil {
