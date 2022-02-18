@@ -4,9 +4,13 @@ import (
 	"fmt"
 )
 
+type Config struct {
+	DataSize int
+	Factor   int64
+	ReadTime int
+}
+
 type Metrics struct {
-	DataSize      int
-	Factor        int64
 	CurrentFactor float64
 	RehashTime    int
 	LastEntry     *DictEntry
@@ -27,6 +31,14 @@ type DictEntry struct {
 	Next *DictEntry
 }
 
+func InitConfig(factor int64, dataSize int, readTime int) Config {
+	return Config{
+		DataSize: dataSize,
+		Factor:   factor,
+		ReadTime: readTime,
+	}
+}
+
 func InitDict() *Dict {
 	return &Dict{
 		t1:       make([]*DictEntry, 8),
@@ -36,10 +48,8 @@ func InitDict() *Dict {
 	}
 }
 
-func InitMetrics(factor int64, dataSize int) *Metrics {
+func InitMetrics() *Metrics {
 	return &Metrics{
-		DataSize:      dataSize,
-		Factor:        factor,
 		CurrentFactor: 0,
 		RehashTime:    0,
 		LastEntry:     nil,
@@ -70,20 +80,20 @@ func (d *Dict) migration() {
 	}
 }
 
-func (d *Dict) expandDict(m *Metrics) {
+func (d *Dict) expandDict() {
 	d.size = d.size << 1
 	d.sizemask = d.size - 1
 	d.migration()
 	d.t1 = d.t2
 	d.t2 = nil
-	m.RehashTime++
 }
 
-func (d *Dict) Set(key string, val string, m *Metrics) {
+func (d *Dict) Set(key string, val string, m *Metrics, c Config) {
 	m.CurrentFactor = float64(d.used) / float64(d.size)
 
-	if d.used/d.size >= m.Factor {
-		d.expandDict(m)
+	if d.used/d.size >= c.Factor {
+		d.expandDict()
+		m.RehashTime++
 	}
 
 	h := MurmurHash64A([]byte(key))
@@ -151,6 +161,4 @@ func (d *Dict) AllDB(m *Metrics) {
 		}
 		e = e.Next
 	}
-
-	//fmt.Printf("slotMap: %v \n", slotMap)
 }

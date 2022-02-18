@@ -4,4 +4,4 @@ GORUN=$(GO) run
 
 .PHONY: main
 main:
-	$(GORUN) ./
+	$(GORUN) ./ --factor=1 --dataSize=262144 --readTime=100000
