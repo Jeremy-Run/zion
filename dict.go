@@ -68,11 +68,9 @@ func (d *Dict) migration() {
 				} else {
 					d.t2[entry.H&d.sizemask] = &DictEntry{H: entry.H, Key: entry.Key, Val: entry.Val}
 				}
-
 				if next == nil {
 					break
 				}
-
 				entry = next
 				next = entry.Next
 			}
@@ -144,7 +142,6 @@ func (d *Dict) AllDB(m *Metrics) {
 					m.MaxLoad = slotMap[i]
 					maxIndex = i
 				}
-
 				if entry.Next == nil {
 					break
 				}
