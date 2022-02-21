@@ -86,3 +86,33 @@ func (d *DictHR) Get(key string) string {
 	}
 	return ""
 }
+
+func (d *DictHR) AllDB(m *MetricsHR) {
+	slotMap := make(map[int64]int)
+
+	maxIndex := int64(0)
+	for i := int64(0); i < d.size; i++ {
+		if entry := d.t[i]; entry != nil {
+			for true {
+				slotMap[i]++
+				if m.MaxLoad < slotMap[i] {
+					m.MaxLoad = slotMap[i]
+					maxIndex = i
+				}
+				if entry.Next == nil {
+					break
+				}
+				entry = entry.Next
+			}
+		}
+	}
+
+	e := d.t[maxIndex]
+	for true {
+		if e.Next == nil {
+			m.LastEntry = e
+			break
+		}
+		e = e.Next
+	}
+}
