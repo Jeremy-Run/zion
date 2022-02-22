@@ -42,4 +42,5 @@ func main() {
 	// Print metrics
 	mj, _ := json.Marshal(m)
 	fmt.Printf("Metrics: %s \n", mj)
+	fmt.Printf("")
 }
