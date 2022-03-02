@@ -38,13 +38,14 @@ func (d *DictHR) Set(key string, val string) {
 	h := common.MurmurHash64A([]byte(key))
 	subscript := h & d.sizemask
 	if entry := d.t[subscript]; entry != nil {
+		head := entry
 		pre := entry
 		t := 1
 		tag := entry.Tag
 		for true {
 			if entry.Tag == tag {
 				if t > 1 {
-					pre.Next = &DictEntryHR{H: h, Tag: pre.Tag + 1, Key: key, Val: val, Next: entry}
+					pre.Next = &DictEntryHR{H: h, Tag: pre.Tag + 1, Key: key, Val: val, Next: head}
 					break
 				}
 				t <<= 1
@@ -53,8 +54,8 @@ func (d *DictHR) Set(key string, val string) {
 				entry.Val = val
 				return
 			}
-			entry = entry.Next
 			pre = entry
+			entry = entry.Next
 		}
 	} else {
 		d.t[subscript] = &DictEntryHR{H: h, Tag: 1, Key: key, Val: val}
