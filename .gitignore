@@ -1,0 +1,7 @@
+bin
+releases
+.DS_Store
+.idea
+.vscode/
+logs
+tmp/
