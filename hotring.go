@@ -37,15 +37,15 @@ func (d *DictHR) Set(key string, val string) {
 	subscript := h & d.sizemask
 	if entry := d.t[subscript]; entry != nil {
 		pre := entry
-		t := 0
+		t := 1
 		tag := entry.Tag
 		for true {
 			if entry.Tag == tag {
-				if t >= 1 {
+				if t > 1 {
 					pre.Next = &DictEntryHR{H: h, Tag: pre.Tag + 1, Key: key, Val: val, Next: entry}
 					break
 				}
-				t++
+				t <<= 1
 			}
 			if entry.Key == key {
 				entry.Val = val
