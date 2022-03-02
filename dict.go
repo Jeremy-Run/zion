@@ -68,7 +68,7 @@ func (d *Dict) migration() {
 }
 
 func (d *Dict) expandDict() {
-	d.size = d.size << 1
+	d.size <<= 1
 	d.sizemask = d.size - 1
 	d.migration()
 	d.t1 = d.t2
