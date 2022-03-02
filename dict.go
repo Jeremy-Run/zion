@@ -5,6 +5,9 @@ import (
 	"flag"
 	"fmt"
 	"time"
+
+	"github.com/Jeremy-Run/zion/common"
+	"github.com/Jeremy-Run/zion/config"
 )
 
 type Metrics struct {
@@ -75,7 +78,7 @@ func (d *Dict) expandDict() {
 	d.t2 = nil
 }
 
-func (d *Dict) Set(key string, val string, m *Metrics, c Config) {
+func (d *Dict) Set(key string, val string, m *Metrics, c config.Config) {
 	m.CurrentFactor = float64(d.used) / float64(d.size)
 
 	if d.used/d.size >= c.Factor {
@@ -83,7 +86,7 @@ func (d *Dict) Set(key string, val string, m *Metrics, c Config) {
 		m.RehashTime++
 	}
 
-	h := MurmurHash64A([]byte(key))
+	h := common.MurmurHash64A([]byte(key))
 	subscript := h & d.sizemask
 	if entry := d.t1[subscript]; entry != nil {
 		for true {
@@ -104,7 +107,7 @@ func (d *Dict) Set(key string, val string, m *Metrics, c Config) {
 }
 
 func (d *Dict) Get(key string) string {
-	h := MurmurHash64A([]byte(key))
+	h := common.MurmurHash64A([]byte(key))
 	if entry := d.t1[h&d.sizemask]; entry != nil {
 		for true {
 			if entry.Key == key {
@@ -157,7 +160,7 @@ func Exec() {
 	flag.Parse()
 
 	// Initialize basic data
-	c := InitConfig(*factor, *dataSize, *readTime)
+	c := config.InitConfig(*factor, *dataSize, *readTime)
 	d := InitDict()
 	m := InitMetrics()
 

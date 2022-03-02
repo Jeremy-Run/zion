@@ -1,4 +1,6 @@
-package main
+package hotring
+
+import "github.com/Jeremy-Run/zion/common"
 
 type MetricsHR struct {
 	CurrentFactor float64
@@ -33,7 +35,7 @@ func InitDictHR() *DictHR {
 
 func (d *DictHR) Set(key string, val string) {
 
-	h := MurmurHash64A([]byte(key))
+	h := common.MurmurHash64A([]byte(key))
 	subscript := h & d.sizemask
 	if entry := d.t[subscript]; entry != nil {
 		pre := entry
@@ -62,17 +64,17 @@ func (d *DictHR) Set(key string, val string) {
 }
 
 func (d *DictHR) Get(key string) string {
-	h := MurmurHash64A([]byte(key))
+	h := common.MurmurHash64A([]byte(key))
 	subscript := h & d.sizemask
 	if entry := d.t[subscript]; entry != nil {
-		t := 0
+		t := 1
 		tag := entry.Tag
 		for true {
 			if entry.Tag == tag {
-				if t >= 1 {
+				if t > 1 {
 					return ""
 				}
-				t++
+				t <<= 1
 			}
 			if entry.Key == key {
 				if d.t[subscript] != entry {

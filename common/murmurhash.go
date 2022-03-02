@@ -1,4 +1,4 @@
-package main
+package common
 
 const (
 	BIG_M = 0xc6a4a7935bd1e995
