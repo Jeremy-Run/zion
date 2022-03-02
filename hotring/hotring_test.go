@@ -2,7 +2,9 @@ package hotring
 
 import (
 	"fmt"
+	"math/rand"
 	"testing"
+	"time"
 )
 
 func showAllDB(db *DictHR) {
@@ -38,10 +40,32 @@ func showAllDB(db *DictHR) {
 	}
 }
 
+const Key = "hello%d"
+const Value = "world%d"
+
 func Test_Set(t *testing.T) {
 	db := InitDictHR()
 	for i := 0; i <= 10; i++ {
-		db.Set(fmt.Sprintf("hello%d", i), fmt.Sprintf("world%d", i))
+		db.Set(fmt.Sprintf(Key, i), fmt.Sprintf(Value, i))
 	}
+	showAllDB(db)
+}
+
+func Test_Get(t *testing.T) {
+	db := InitDictHR()
+
+	max := 10
+	for i := 0; i <= max; i++ {
+		db.Set(fmt.Sprintf(Key, i), fmt.Sprintf(Value, i))
+	}
+	rand.Seed(time.Now().UnixNano())
+
+	showAllDB(db)
+
+	k := fmt.Sprintf(Key, rand.Intn(max))
+	fmt.Printf("======================================\n")
+	fmt.Printf("key: %s, value: %s \n", k, db.Get(k))
+	fmt.Printf("======================================\n")
+
 	showAllDB(db)
 }
