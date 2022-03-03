@@ -8,7 +8,7 @@ import (
 )
 
 func showAllDB(db *DictHR) {
-	for slot, entry := range db.t {
+	for slot, entry := range db.t0 {
 		if entry == nil {
 			fmt.Printf("slot number: %d, link: nil \n", slot)
 			continue

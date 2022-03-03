@@ -2,17 +2,10 @@ package hotring
 
 import "github.com/Jeremy-Run/zion/common"
 
-type MetricsHR struct {
-	CurrentFactor float64
-	RehashTime    int
-	LastEntry     *DictEntryHR
-	MaxLoad       int
-}
-
 type DictHR struct {
-	t        []*DictEntryHR
+	t0, t1   []*DictEntryHR
 	size     int64
-	sizemask int64
+	sizeMask int64
 	used     int64
 }
 
@@ -26,18 +19,77 @@ type DictEntryHR struct {
 
 func InitDictHR() *DictHR {
 	return &DictHR{
-		t:        make([]*DictEntryHR, 8),
+		t0:       make([]*DictEntryHR, 8),
 		size:     8,
-		sizemask: 7,
+		sizeMask: 7,
 		used:     0,
 	}
 }
 
+func (d *DictHR) migration() {
+	d.t1 = make([]*DictEntryHR, d.size)
+	for i := int64(0); i < d.size>>1; i++ {
+		entry := d.t0[i]
+		if entry == nil {
+			continue
+		}
+
+		t := 1
+		tag := entry.Tag
+
+		for true {
+			if entry.Tag == tag {
+				if t > 1 {
+					break
+				}
+				t <<= 1
+			}
+
+			subscript := entry.H & d.sizeMask
+			entry1 := d.t1[subscript]
+			if entry1 != nil {
+				head := entry1
+				pre := entry1
+				t1 := 1
+				tag1 := entry1.Tag
+				for true {
+					if entry1.Tag == tag1 {
+						if t1 > 1 {
+							pre.Next = &DictEntryHR{Tag: pre.Tag + 1, Key: pre.Key, Val: pre.Val, Next: head}
+							break
+						}
+						t1 <<= 1
+					}
+					pre = entry1
+					entry1 = entry1.Next
+				}
+			} else {
+				d.t1[subscript] = &DictEntryHR{Tag: 1, Key: entry.Key, Val: entry.Val}
+				d.t1[subscript].Next = d.t1[subscript]
+			}
+
+			entry = entry.Next
+		}
+	}
+}
+
+func (d *DictHR) expandDict() {
+	d.size <<= 1
+	d.sizeMask = d.size - 1
+	d.migration()
+	d.t0 = d.t1
+	d.t1 = nil
+}
+
 func (d *DictHR) Set(key string, val string) {
 
+	if float64(d.used)/float64(d.size) >= 1 {
+		d.expandDict()
+	}
+
 	h := common.MurmurHash64A([]byte(key))
-	subscript := h & d.sizemask
-	if entry := d.t[subscript]; entry != nil {
+	subscript := h & d.sizeMask
+	if entry := d.t0[subscript]; entry != nil {
 		head := entry
 		pre := entry
 		t := 1
@@ -45,7 +97,7 @@ func (d *DictHR) Set(key string, val string) {
 		for true {
 			if entry.Tag == tag {
 				if t > 1 {
-					pre.Next = &DictEntryHR{H: h, Tag: pre.Tag + 1, Key: key, Val: val, Next: head}
+					pre.Next = &DictEntryHR{Tag: pre.Tag + 1, Key: key, Val: val, Next: head}
 					break
 				}
 				t <<= 1
@@ -58,16 +110,16 @@ func (d *DictHR) Set(key string, val string) {
 			entry = entry.Next
 		}
 	} else {
-		d.t[subscript] = &DictEntryHR{H: h, Tag: 1, Key: key, Val: val}
-		d.t[subscript].Next = d.t[subscript]
+		d.t0[subscript] = &DictEntryHR{Tag: 1, Key: key, Val: val}
+		d.t0[subscript].Next = d.t0[subscript]
 	}
 	d.used++
 }
 
 func (d *DictHR) Get(key string) string {
 	h := common.MurmurHash64A([]byte(key))
-	subscript := h & d.sizemask
-	if entry := d.t[subscript]; entry != nil {
+	subscript := h & d.sizeMask
+	if entry := d.t0[subscript]; entry != nil {
 		t := 1
 		tag := entry.Tag
 		for true {
@@ -78,8 +130,8 @@ func (d *DictHR) Get(key string) string {
 				t <<= 1
 			}
 			if entry.Key == key {
-				if d.t[subscript] != entry {
-					d.t[subscript] = entry
+				if d.t0[subscript] != entry {
+					d.t0[subscript] = entry
 				}
 				return entry.Val
 			}
@@ -88,34 +140,4 @@ func (d *DictHR) Get(key string) string {
 		}
 	}
 	return ""
-}
-
-func (d *DictHR) AllDB(m *MetricsHR) {
-	slotMap := make(map[int64]int)
-
-	maxIndex := int64(0)
-	for i := int64(0); i < d.size; i++ {
-		if entry := d.t[i]; entry != nil {
-			for true {
-				slotMap[i]++
-				if m.MaxLoad < slotMap[i] {
-					m.MaxLoad = slotMap[i]
-					maxIndex = i
-				}
-				if entry.Next == nil {
-					break
-				}
-				entry = entry.Next
-			}
-		}
-	}
-
-	e := d.t[maxIndex]
-	for true {
-		if e.Next == nil {
-			m.LastEntry = e
-			break
-		}
-		e = e.Next
-	}
 }
