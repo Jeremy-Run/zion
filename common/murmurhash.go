@@ -1,5 +1,7 @@
 package common
 
+import "github.com/spaolacci/murmur3"
+
 const (
 	BIG_M = 0xc6a4a7935bd1e995
 	BIG_R = 47
@@ -53,4 +55,12 @@ func MurmurHash64A(data []byte) (h int64) {
 	h *= ibigm
 	h ^= int64(uint64(h) >> BIG_R)
 	return
+}
+
+func Murmur32(str string) uint32 {
+	return murmur3.Sum32([]byte(str))
+}
+
+func Murmur64(str string) uint64 {
+	return murmur3.Sum64([]byte(str))
 }
