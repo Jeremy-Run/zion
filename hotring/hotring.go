@@ -1,6 +1,7 @@
 package hotring
 
 import (
+	"errors"
 	"fmt"
 	"github.com/Jeremy-Run/zion/common"
 )
@@ -20,13 +21,16 @@ type DictEntryHR struct {
 	Next *DictEntryHR
 }
 
-func InitDictHR() *DictHR {
-	return &DictHR{
-		t0:       make([]*DictEntryHR, 8),
-		size:     8,
-		sizeMask: 7,
-		used:     0,
+func InitDictHR(cap int64) (*DictHR, error) {
+	if cap&(cap-1) != 0 {
+		return nil, errors.New("cap has to be a power of 2！")
 	}
+	return &DictHR{
+		t0:       make([]*DictEntryHR, cap),
+		size:     cap,
+		sizeMask: cap - 1,
+		used:     0,
+	}, nil
 }
 
 func (d *DictHR) migration() {
