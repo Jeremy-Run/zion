@@ -55,7 +55,8 @@ func (d *DictHR) migration() {
 				for true {
 					if entry1.Tag == tag1 {
 						if t1 > 1 {
-							pre.Next = &DictEntryHR{Tag: pre.Tag + 1, Key: pre.Key, Val: pre.Val, Next: head}
+							pre.Next = &DictEntryHR{
+								H: entry.H, Tag: pre.Tag + 1, Key: entry.Key, Val: entry.Val, Next: head}
 							break
 						}
 						t1 <<= 1
@@ -64,7 +65,7 @@ func (d *DictHR) migration() {
 					entry1 = entry1.Next
 				}
 			} else {
-				d.t1[subscript] = &DictEntryHR{Tag: 1, Key: entry.Key, Val: entry.Val}
+				d.t1[subscript] = &DictEntryHR{H: entry.H, Tag: 1, Key: entry.Key, Val: entry.Val}
 				d.t1[subscript].Next = d.t1[subscript]
 			}
 
@@ -97,7 +98,7 @@ func (d *DictHR) Set(key string, val string) {
 		for true {
 			if entry.Tag == tag {
 				if t > 1 {
-					pre.Next = &DictEntryHR{Tag: pre.Tag + 1, Key: key, Val: val, Next: head}
+					pre.Next = &DictEntryHR{H: h, Tag: pre.Tag + 1, Key: key, Val: val, Next: head}
 					break
 				}
 				t <<= 1
@@ -110,7 +111,7 @@ func (d *DictHR) Set(key string, val string) {
 			entry = entry.Next
 		}
 	} else {
-		d.t0[subscript] = &DictEntryHR{Tag: 1, Key: key, Val: val}
+		d.t0[subscript] = &DictEntryHR{H: h, Tag: 1, Key: key, Val: val}
 		d.t0[subscript].Next = d.t0[subscript]
 	}
 	d.used++
